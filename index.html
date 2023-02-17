@@ -32,12 +32,14 @@
 
 	<script src="https://rawgit.com/schmich/instascan-builds/master/instascan.min.js"></script>
 	<script>
+		let moggycoins = [];
+
 		function scanQR() {
 			let scanner = new Instascan.Scanner({ video: document.getElementById('preview'), scanPeriod: 5, mirror: false });
 			scanner.addListener('scan', function (content) {
 				document.getElementById('scan-result').value = content;
-				localStorage.setItem('moggycoin', content);
-				updateBalance();
+				moggycoins.push(content);
+				localStorage.setItem('moggycoins', JSON.stringify(moggycoins));
 				scanner.stop();
 			});
 			Instascan.Camera.getCameras().then(function (cameras) {
@@ -52,11 +54,11 @@
 		}
 
 		function updateBalance() {
-			let moggycoin = localStorage.getItem('moggycoin');
-			if (moggycoin !== null) {
-				// Call API to get balance for MoggyCoin address
-				// Update balance field with returned balance
-				document.getElementById('balance').value = moggycoin; // Display saved MoggyCoin data
+			let moggycoinStr = localStorage.getItem('moggycoins');
+			if (moggycoinStr !== null) {
+				let moggycoins = JSON.parse(moggycoinStr);
+				let balance = moggycoins.length + ' MoggyCoins';
+				document.getElementById('balance').value = balance;
 			} else {
 				document.getElementById('balance').value = 'No MoggyCoin saved.';
 			}
