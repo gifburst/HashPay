@@ -22,25 +22,27 @@
 			</div>
 			<div class="col-md-6">
 				<h2>My MoggyCoins</h2>
-				<div class="mb-3">
-					<label for="balance" class="form-label">Balance:</label>
-					<input type="text" class="form-control" id="balance" readonly>
-				</div>
+				<div id="coin-codes"></div>
 			</div>
 		</div>
 	</div>
 
 	<script src="https://rawgit.com/schmich/instascan-builds/master/instascan.min.js"></script>
 	<script>
-		let moggycoins = [];
-
 		function scanQR() {
 			let scanner = new Instascan.Scanner({ video: document.getElementById('preview'), scanPeriod: 5, mirror: false });
 			scanner.addListener('scan', function (content) {
 				document.getElementById('scan-result').value = content;
-				moggycoins.push(content);
-				localStorage.setItem('moggycoins', JSON.stringify(moggycoins));
+				let coinCodes = localStorage.getItem('moggycoins');
+				if (coinCodes === null) {
+					coinCodes = [];
+				} else {
+					coinCodes = JSON.parse(coinCodes);
+				}
+				coinCodes.push(content);
+				localStorage.setItem('moggycoins', JSON.stringify(coinCodes));
 				scanner.stop();
+				displayCoinCodes();
 			});
 			Instascan.Camera.getCameras().then(function (cameras) {
 				if (cameras.length > 0) {
@@ -53,19 +55,22 @@
 			});
 		}
 
-		function updateBalance() {
-			let moggycoinStr = localStorage.getItem('moggycoins');
-			if (moggycoinStr !== null) {
-				let moggycoins = JSON.parse(moggycoinStr);
-				let balance = moggycoins.length + ' MoggyCoins';
-				document.getElementById('balance').value = balance;
+		function displayCoinCodes() {
+			let coinCodes = localStorage.getItem('moggycoins');
+			if (coinCodes !== null) {
+				coinCodes = JSON.parse(coinCodes);
+				let coinCodesHtml = '';
+				for (let i = 0; i < coinCodes.length; i++) {
+					coinCodesHtml += `<p>${coinCodes[i]}</p>`;
+				}
+				document.getElementById('coin-codes').innerHTML = coinCodesHtml;
 			} else {
-				document.getElementById('balance').value = 'No MoggyCoin saved.';
+				document.getElementById('coin-codes').innerHTML = '<p>No MoggyCoin saved.</p>';
 			}
 		}
 
-		// Update balance field on page load
-		updateBalance();
+		// Display saved coin codes on page load
+		displayCoinCodes();
 	</script>
 </body>
 </html>
