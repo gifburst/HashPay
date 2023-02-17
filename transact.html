@@ -1,0 +1,78 @@
+<html>
+<head>
+  <title>MoggyCoin Wallet</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script src="https://cdn.rawgit.com/davidshimjs/qrcodejs/gh-pages/qrcode.min.js"></script>
+</head>
+<body>
+  <div class="container mt-5">
+    <div class="row">
+      <div class="col-md-6">
+        <h2>MoggyCoins</h2>
+        <div id="coin-list"></div>
+      </div>
+      <div class="col-md-6">
+        <h2>QR Code</h2>
+        <div id="qr-code"></div>
+        <div id="countdown"></div>
+      </div>
+    </div>
+  </div>
+  <script>
+    let coinList = document.getElementById('coin-list');
+    let qrCode = document.getElementById('qr-code');
+    let countdown = document.getElementById('countdown');
+    let qr = null;
+    let countdownInterval = null;
+    
+    function displayCoinCodes() {
+      let coinCodes = localStorage.getItem('moggycoins');
+      if (coinCodes !== null) {
+        coinCodes = JSON.parse(coinCodes);
+        let coinCodesHtml = '';
+        for (let i = 0; i < coinCodes.length; i++) {
+          coinCodesHtml += `<p class="coin-code">${coinCodes[i]}</p>`;
+        }
+        coinList.innerHTML = coinCodesHtml;
+      } else {
+        coinList.innerHTML = '<p>No MoggyCoin saved.</p>';
+      }
+    }
+    
+    function showQRCode(code) {
+      qr = new QRCode(qrCode, {
+        text: code,
+        width: 256,
+        height: 256,
+        colorDark: "#000000",
+        colorLight: "#ffffff",
+        correctLevel: QRCode.CorrectLevel.H
+      });
+      countdown.innerHTML = 'QR code expires in 30 seconds';
+      let secondsLeft = 30;
+      countdownInterval = setInterval(() => {
+        secondsLeft--;
+        countdown.innerHTML = `QR code expires in ${secondsLeft} seconds`;
+        if (secondsLeft == 0) {
+          clearInterval(countdownInterval);
+          qr.clear();
+          qrCode.innerHTML = '';
+          countdown.innerHTML = '';
+          localStorage.removeItem('moggycoins');
+        }
+      }, 1000);
+    }
+    
+    coinList.addEventListener('click', (event) => {
+      if (event.target.classList.contains('coin-code')) {
+        let code = event.target.innerText;
+        showQRCode(code);
+        localStorage.removeItem('moggycoins');
+      }
+    });
+    
+    displayCoinCodes();
+  </script>
+</body>
+</html>
