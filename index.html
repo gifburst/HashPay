@@ -1,63 +1,52 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <title>Hashcash Tokens</title>
-  </head>
-  <body>
-    <h1>Hashcash Tokens</h1>
-    
-    <button onclick="generateToken()">Generate Token</button>
-    
-    <h2>My Tokens</h2>
-    <div id="my-tokens"></div>
-    
-    <h2>Received Tokens</h2>
-    <div id="received-tokens"></div>
-    
-    <script>
-      function generateToken() {
-        var token = "hashcash:" + Date.now();
-        localStorage.setItem(token, true);
-        displayTokens();
-      }
-      
-      function displayTokens() {
-        var myTokensDiv = document.getElementById("my-tokens");
-        var receivedTokensDiv = document.getElementById("received-tokens");
-        myTokensDiv.innerHTML = "";
-        receivedTokensDiv.innerHTML = "";
-        
-        for (var i = 0; i < localStorage.length; i++) {
-          var token = localStorage.key(i);
-          if (token.startsWith("hashcash:")) {
-            var button = document.createElement("button");
-            button.textContent = token;
-            button.onclick = function() {
-              activateToken(token);
-            };
-            if (localStorage.getItem(token) === "received") {
-              receivedTokensDiv.appendChild(button);
-            } else {
-              myTokensDiv.appendChild(button);
-            }
-          }
-        }
-      }
-      
-      function activateToken(token) {
-        var now = Date.now();
-        var timestamp = parseInt(token.split(":")[1]);
-        if (now - timestamp > 180000) {
-          alert("Token has expired!");
-        } else if (localStorage.getItem(token) === "received") {
-          alert("Token has already been activated!");
-        } else {
-          localStorage.setItem(token, "received");
-          displayTokens();
-        }
-      }
-      
-      displayTokens();
-    </script>
-  </body>
+<head>
+	<title>Hashcash Tokens</title>
+	<script src="https://cdn.rawgit.com/davidshimjs/qrcodejs/gh-pages/qrcode.min.js"></script>
+	<script src="https://rawgit.com/mebjas/html5-qrcode/master/html5-qrcode.min.js"></script>
+</head>
+<body>
+	<h1>Hashcash Tokens</h1>
+	<div>
+		<button onclick="generateToken()">Generate Token</button>
+		<div>
+			<canvas id="qrcode"></canvas>
+		</div>
+		<div>
+			<p>Token: <span id="token"></span></p>
+		</div>
+		<button onclick="scanToken()">Scan Token</button>
+		<div>
+			<p>Saved Tokens:</p>
+			<ul id="tokenList"></ul>
+		</div>
+	</div>
+	<script>
+		function generateToken() {
+			const token = Math.random().toString(36).substr(2, 9);
+			localStorage.setItem(token, Date.now() + 180000);
+			const qrcode = new QRCode("qrcode");
+			qrcode.makeCode(token);
+			document.getElementById("token").textContent = token;
+		}
+
+		function scanToken() {
+			var html5QrcodeScanner = new Html5QrcodeScanner(
+				"reader", { fps: 10, qrbox: 250 });
+			html5QrcodeScanner.render(onScanSuccess);
+		}
+
+		function onScanSuccess(qrCodeMessage) {
+			if (localStorage.getItem(qrCodeMessage)) {
+				const tokenList = document.getElementById("tokenList");
+				const tokenItem = document.createElement("li");
+				tokenItem.textContent = qrCodeMessage;
+				tokenList.appendChild(tokenItem);
+				localStorage.removeItem(qrCodeMessage);
+			} else {
+				alert("Invalid token");
+			}
+		}
+	</script>
+</body>
 </html>
