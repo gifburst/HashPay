@@ -1,52 +1,88 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<title>Hashcash Tokens</title>
-	<script src="https://cdn.rawgit.com/davidshimjs/qrcodejs/gh-pages/qrcode.min.js"></script>
-	<script src="https://rawgit.com/mebjas/html5-qrcode/master/html5-qrcode.min.js"></script>
+  <title>Hashcash Tokens</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
+  <script type="text/javascript">
+    function generateToken() {
+      var currentDate = new Date();
+      var expirationDate = new Date(currentDate.getTime() + 300000); // Set expiration for 5 minutes from now
+      var token = "hashcash:" + expirationDate.toISOString();
+      return token;
+    }
+
+    function saveToken(token) {
+      var savedTokens = JSON.parse(localStorage.getItem("hashcashTokens")) || [];
+      savedTokens.push(token);
+      localStorage.setItem("hashcashTokens", JSON.stringify(savedTokens));
+    }
+
+    function loadTokens() {
+      var savedTokens = JSON.parse(localStorage.getItem("hashcashTokens")) || [];
+      var tokenList = document.getElementById("tokenList");
+      tokenList.innerHTML = "";
+      savedTokens.forEach(function(token) {
+        var listItem = document.createElement("li");
+        var qrCode = new QRious({
+          value: token,
+          size: 100
+        });
+        var qrImage = document.createElement("img");
+        qrImage.src = qrCode.toDataURL();
+        listItem.appendChild(qrImage);
+        tokenList.appendChild(listItem);
+      });
+    }
+
+    function scanToken() {
+      // Code to scan a QR code and get the token string
+      // For this example, we'll just hard-code a token
+      var receivedToken = "hashcash:2023-02-16T16:25:00.000Z"; // Example token
+      var savedTokens = JSON.parse(localStorage.getItem("hashcashTokens")) || [];
+      savedTokens.push(receivedToken);
+      localStorage.setItem("hashcashTokens", JSON.stringify(savedTokens));
+      loadTokens();
+    }
+
+    function activateToken(token) {
+      var expirationDate = new Date(token.substr(9));
+      var currentDate = new Date();
+      if (currentDate < expirationDate) {
+        // Token is valid
+        setTimeout(function() {
+          var savedTokens = JSON.parse(localStorage.getItem("hashcashTokens")) || [];
+          var index = savedTokens.indexOf(token);
+          if (index > -1) {
+            savedTokens.splice(index, 1);
+            localStorage.setItem("hashcashTokens", JSON.stringify(savedTokens));
+            loadTokens();
+          }
+        }, expirationDate - currentDate);
+      } else {
+        // Token has expired
+        var savedTokens = JSON.parse(localStorage.getItem("hashcashTokens")) || [];
+        var index = savedTokens.indexOf(token);
+        if (index > -1) {
+          savedTokens.splice(index, 1);
+          localStorage.setItem("hashcashTokens", JSON.stringify(savedTokens));
+          loadTokens();
+        }
+      }
+    }
+  </script>
 </head>
-<body>
-	<h1>Hashcash Tokens</h1>
-	<div>
-		<button onclick="generateToken()">Generate Token</button>
-		<div>
-			<canvas id="qrcode"></canvas>
-		</div>
-		<div>
-			<p>Token: <span id="token"></span></p>
-		</div>
-		<button onclick="scanToken()">Scan Token</button>
-		<div>
-			<p>Saved Tokens:</p>
-			<ul id="tokenList"></ul>
-		</div>
-	</div>
-	<script>
-		function generateToken() {
-			const token = Math.random().toString(36).substr(2, 9);
-			localStorage.setItem(token, Date.now() + 180000);
-			const qrcode = new QRCode("qrcode");
-			qrcode.makeCode(token);
-			document.getElementById("token").textContent = token;
-		}
-
-		function scanToken() {
-			var html5QrcodeScanner = new Html5QrcodeScanner(
-				"reader", { fps: 10, qrbox: 250 });
-			html5QrcodeScanner.render(onScanSuccess);
-		}
-
-		function onScanSuccess(qrCodeMessage) {
-			if (localStorage.getItem(qrCodeMessage)) {
-				const tokenList = document.getElementById("tokenList");
-				const tokenItem = document.createElement("li");
-				tokenItem.textContent = qrCodeMessage;
-				tokenList.appendChild(tokenItem);
-				localStorage.removeItem(qrCodeMessage);
-			} else {
-				alert("Invalid token");
-			}
-		}
-	</script>
+<body onload="loadTokens()">
+  <h1>Hashcash Tokens</h1>
+  <button onclick="scanToken()">Scan Token</button>
+  <br><br>
+  <ul id="tokenList">
+  </ul>
+  <script>
+    // Generate a token and save it to local storage
+    var token = generateToken();
+    saveToken(token);
+    // Activate the token for testing
+    activateToken(token);
+  </script>
 </body>
 </html>
