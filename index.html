@@ -1,34 +1,46 @@
 <!DOCTYPE html>
 <html>
-<head>
-    <meta charset="utf-8">
-    <title>MoggyCoin QR Code Scanner</title>
+  <head>
+    <title>MoggyCoin Wallet</title>
     <script src="https://cdn.rawgit.com/davidshimjs/qrcodejs/gh-pages/qrcode.min.js"></script>
-    <script src="https://rawgit.com/schmich/instascan-builds/master/instascan.min.js"></script>
-</head>
-<body>
-    <h1>MoggyCoin QR Code Scanner</h1>
-    <div>
-        <video id="preview"></video>
-        <canvas style="display:none;"></canvas>
-    </div>
-    <div id="result"></div>
-    <script type="text/javascript">
-        let scanner = new Instascan.Scanner({ video: document.getElementById('preview'), scanPeriod: 5 });
-        scanner.addListener('scan', function (content) {
-            document.getElementById('result').innerHTML = content;
-            new QRCode(document.getElementById("qrcode"), content);
-            // TODO: store content to local storage and add wallet functionalities
-        });
-        Instascan.Camera.getCameras().then(function (cameras) {
-            if (cameras.length > 0) {
-                scanner.start(cameras[0]);
-            } else {
-                console.error('No cameras found.');
-            }
-        }).catch(function (e) {
-            console.error(e);
-        });
+    <script src="https://raw.githubusercontent.com/dwa012/html5-qrcode/master/html5-qrcode.min.js"></script>
+  </head>
+  <body>
+    <h1>MoggyCoin Wallet</h1>
+    <div id="reader"></div>
+    <div id="qr-value"></div>
+    <div id="qr-history"></div>
+    <script>
+      const qrHistory = localStorage.getItem('qrHistory') ? JSON.parse(localStorage.getItem('qrHistory')) : [];
+
+      const html5QrCode = new Html5Qrcode("reader");
+      html5QrCode.start(
+        {
+          facingMode: "environment",
+        },
+        {
+          fps: 10,
+          qrbox: 250,
+        },
+        async (qrCodeMessage) => {
+          // Display the scanned QR code data.
+          document.getElementById("qr-value").innerHTML = `Scanned QR code data: ${qrCodeMessage}`;
+
+          // Add the scanned QR code data to the history and save to local storage.
+          qrHistory.push(qrCodeMessage);
+          localStorage.setItem('qrHistory', JSON.stringify(qrHistory));
+
+          // Display the history of scanned QR code data.
+          let qrHistoryHtml = "";
+          qrHistory.forEach((qr, index) => {
+            qrHistoryHtml += `<div><strong>QR code #${index + 1}:</strong><br>${qr}</div>`;
+          });
+          document.getElementById("qr-history").innerHTML = `<h2>QR code history</h2>${qrHistoryHtml}`;
+        },
+        (errorMessage) => {
+          console.log(errorMessage);
+        }
+      );
     </script>
-</body>
+  </body>
 </html>
