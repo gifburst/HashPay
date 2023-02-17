@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Hashcash Tokens</title>
+  </head>
+  <body>
+    <h1>Hashcash Tokens</h1>
+    
+    <button onclick="generateToken()">Generate Token</button>
+    
+    <h2>My Tokens</h2>
+    <div id="my-tokens"></div>
+    
+    <h2>Received Tokens</h2>
+    <div id="received-tokens"></div>
+    
+    <script>
+      function generateToken() {
+        var token = "hashcash:" + Date.now();
+        localStorage.setItem(token, true);
+        displayTokens();
+      }
+      
+      function displayTokens() {
+        var myTokensDiv = document.getElementById("my-tokens");
+        var receivedTokensDiv = document.getElementById("received-tokens");
+        myTokensDiv.innerHTML = "";
+        receivedTokensDiv.innerHTML = "";
+        
+        for (var i = 0; i < localStorage.length; i++) {
+          var token = localStorage.key(i);
+          if (token.startsWith("hashcash:")) {
+            var button = document.createElement("button");
+            button.textContent = token;
+            button.onclick = function() {
+              activateToken(token);
+            };
+            if (localStorage.getItem(token) === "received") {
+              receivedTokensDiv.appendChild(button);
+            } else {
+              myTokensDiv.appendChild(button);
+            }
+          }
+        }
+      }
+      
+      function activateToken(token) {
+        var now = Date.now();
+        var timestamp = parseInt(token.split(":")[1]);
+        if (now - timestamp > 180000) {
+          alert("Token has expired!");
+        } else if (localStorage.getItem(token) === "received") {
+          alert("Token has already been activated!");
+        } else {
+          localStorage.setItem(token, "received");
+          displayTokens();
+        }
+      }
+      
+      displayTokens();
+    </script>
+  </body>
+</html>
