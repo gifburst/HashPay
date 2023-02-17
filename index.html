@@ -3,7 +3,7 @@
 <head>
 	<title>MoggyCoin Wallet</title>
 	<meta charset="utf-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="apple-mobile-web-app-capable" content="yes">
 	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
@@ -28,9 +28,10 @@
 	</div>
 
 	<script src="https://rawgit.com/schmich/instascan-builds/master/instascan.min.js"></script>
+	<script type="text/javascript" src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
 	<script>
 		function scanQR() {
-			let scanner = new Instascan.Scanner({ video: document.getElementById('preview'), scanPeriod: 5, mirror: false });
+			let scanner = new Instascan.Scanner({ video: document.getElementById('scanner'), scanPeriod: 5, mirror: false });
 			scanner.addListener('scan', function (content) {
 				document.getElementById('scan-result').value = content;
 				let coinCodes = localStorage.getItem('moggycoins');
@@ -45,12 +46,7 @@
 				displayCoinCodes();
 			});
 			Instascan.Camera.getCameras().then(function (cameras) {
-				const frontCamera = cameras.find(function (camera) {
-					return camera.facing === 'user';
-				});
-				if (frontCamera) {
-					scanner.start(frontCamera);
-				} else if (cameras.length > 0) {
+				if (cameras.length > 0) {
 					scanner.start(cameras[0]);
 				} else {
 					console.error('No cameras found.');
@@ -58,8 +54,9 @@
 			}).catch(function (e) {
 				console.error(e);
 			});
+			// Add data-attribution attribute to the video element
+			document.getElementById('scanner').setAttribute('data-attribution', 'MoggyCoin Wallet');
 		}
-
 		function displayCoinCodes() {
 			let coinCodes = localStorage.getItem('moggycoins');
 			if (coinCodes !== null) {
