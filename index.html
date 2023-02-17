@@ -1,66 +1,22 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <title>Hashcash Token</title>
-    <script src="https://unpkg.com/@zxing/library@0.18.5"></script>
-    <script>
-      function generateToken() {
-        const date = new Date();
-        const token = `${date.getTime()}-hashcash`;
-        localStorage.setItem(token, 'unused');
-        return token;
-      }
-
-      function scanQRCode() {
-        const codeReader = new ZXing.BrowserQRCodeReader();
-        codeReader
-          .decodeOnceFromVideoDevice(undefined, 'video')
-          .then(result => {
-            console.log(result.text);
-            localStorage.setItem(result.text, 'unused');
-          })
-          .catch(err => console.error(err));
-      }
-
-      function showTokens() {
-        const tokens = Object.keys(localStorage);
-        const tokensDiv = document.getElementById('tokens');
-        tokensDiv.innerHTML = '';
-        tokens.forEach(token => {
-          const button = document.createElement('button');
-          button.textContent = token;
-          button.addEventListener('click', () => {
-            const qrCode = new QRCode(document.getElementById('qrcode'), {
-              text: token,
-              width: 128,
-              height: 128,
-              colorDark: '#000000',
-              colorLight: '#ffffff',
-              correctLevel: QRCode.CorrectLevel.H
-            });
-            localStorage.removeItem(token);
-            const timerDiv = document.getElementById('timer');
-            timerDiv.textContent = 'Token will be removed in 3 minutes';
-            setTimeout(() => {
-              timerDiv.textContent = '';
-            }, 3000);
-          });
-          tokensDiv.appendChild(button);
-        });
-      }
-    </script>
-  </head>
-  <body>
-    <h1>Hashcash Token</h1>
-    <button onclick="generateToken()">Generate Token</button>
-    <button onclick="scanQRCode()">Scan Token</button>
-    <div id="tokens"></div>
-    <div id="qrcode"></div>
-    <div id="timer"></div>
-    <script>
-      showTokens();
-    </script>
-    <video id="video" style="display: none;"></video>
-  </body>
+<head>
+  <title>MoggyCoin Wallet</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+</head>
+<body>
+  <h1>MoggyCoin Wallet</h1>
+  <hr>
+  <label for="scanInput">Scan MoggyCoin QR Code:</label>
+  <input type="text" id="scanInput" size="50">
+  <button onclick="scanQRCode()">Scan</button>
+  <hr>
+  <label for="coinList">MoggyCoin List:</label>
+  <select id="coinList"></select>
+  <button onclick="clearList()">Clear</button>
+  <hr>
+  <script src="wallet.js"></script>
+</body>
 </html>
-
