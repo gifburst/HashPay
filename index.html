@@ -1,22 +1,68 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>MoggyCoin Wallet</title>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+	<title>MoggyCoin Wallet</title>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 </head>
 <body>
-  <h1>MoggyCoin Wallet</h1>
-  <hr>
-  <label for="scanInput">Scan MoggyCoin QR Code:</label>
-  <input type="text" id="scanInput" size="50">
-  <button onclick="scanQRCode()">Scan</button>
-  <hr>
-  <label for="coinList">MoggyCoin List:</label>
-  <select id="coinList"></select>
-  <button onclick="clearList()">Clear</button>
-  <hr>
-  <script src="wallet.js"></script>
+	<div class="container mt-5">
+		<div class="row">
+			<div class="col-md-6">
+				<h2>Scan MoggyCoin QR Code</h2>
+				<div class="mb-3">
+					<label for="scan-result" class="form-label">Scan Result:</label>
+					<input type="text" class="form-control" id="scan-result" readonly>
+				</div>
+				<button type="button" class="btn btn-primary" onclick="scanQR()">Scan QR Code</button>
+			</div>
+			<div class="col-md-6">
+				<h2>My MoggyCoins</h2>
+				<div class="mb-3">
+					<label for="balance" class="form-label">Balance:</label>
+					<input type="text" class="form-control" id="balance" readonly>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<script src="https://rawgit.com/schmich/instascan-builds/master/instascan.min.js"></script>
+	<script>
+		function scanQR() {
+			let scanner = new Instascan.Scanner({ video: document.getElementById('preview'), scanPeriod: 5, mirror: false });
+			scanner.addListener('scan', function (content) {
+				document.getElementById('scan-result').value = content;
+				localStorage.setItem('moggycoin', content);
+				scanner.stop();
+			});
+			Instascan.Camera.getCameras().then(function (cameras) {
+				if (cameras.length > 0) {
+					scanner.start(cameras[0]);
+				} else {
+					console.error('No cameras found.');
+				}
+			}).catch(function (e) {
+				console.error(e);
+			});
+		}
+
+		function updateBalance() {
+			let moggycoin = localStorage.getItem('moggycoin');
+			if (moggycoin !== null) {
+				// Call API to get balance for MoggyCoin address
+				// Update balance field with returned balance
+				document.getElementById('balance').value = 'X MoggyCoins'; // Replace X with actual balance
+			} else {
+				document.getElementById('balance').value = 'No MoggyCoin saved.';
+			}
+		}
+
+		// Update balance field on page load
+		updateBalance();
+	</script>
 </body>
 </html>
