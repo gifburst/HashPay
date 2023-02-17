@@ -37,6 +37,7 @@
 			scanner.addListener('scan', function (content) {
 				document.getElementById('scan-result').value = content;
 				localStorage.setItem('moggycoin', content);
+				updateBalance();
 				scanner.stop();
 			});
 			Instascan.Camera.getCameras().then(function (cameras) {
@@ -55,7 +56,7 @@
 			if (moggycoin !== null) {
 				// Call API to get balance for MoggyCoin address
 				// Update balance field with returned balance
-				document.getElementById('balance').value = 'X MoggyCoins'; // Replace X with actual balance
+				document.getElementById('balance').value = moggycoin; // Display saved MoggyCoin data
 			} else {
 				document.getElementById('balance').value = 'No MoggyCoin saved.';
 			}
