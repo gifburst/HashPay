@@ -1,88 +1,66 @@
 <!DOCTYPE html>
 <html>
-<head>
-  <title>Hashcash Tokens</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
-  <script type="text/javascript">
-    function generateToken() {
-      var currentDate = new Date();
-      var expirationDate = new Date(currentDate.getTime() + 300000); // Set expiration for 5 minutes from now
-      var token = "hashcash:" + expirationDate.toISOString();
-      return token;
-    }
-
-    function saveToken(token) {
-      var savedTokens = JSON.parse(localStorage.getItem("hashcashTokens")) || [];
-      savedTokens.push(token);
-      localStorage.setItem("hashcashTokens", JSON.stringify(savedTokens));
-    }
-
-    function loadTokens() {
-      var savedTokens = JSON.parse(localStorage.getItem("hashcashTokens")) || [];
-      var tokenList = document.getElementById("tokenList");
-      tokenList.innerHTML = "";
-      savedTokens.forEach(function(token) {
-        var listItem = document.createElement("li");
-        var qrCode = new QRious({
-          value: token,
-          size: 100
-        });
-        var qrImage = document.createElement("img");
-        qrImage.src = qrCode.toDataURL();
-        listItem.appendChild(qrImage);
-        tokenList.appendChild(listItem);
-      });
-    }
-
-    function scanToken() {
-      // Code to scan a QR code and get the token string
-      // For this example, we'll just hard-code a token
-      var receivedToken = "hashcash:2023-02-16T16:25:00.000Z"; // Example token
-      var savedTokens = JSON.parse(localStorage.getItem("hashcashTokens")) || [];
-      savedTokens.push(receivedToken);
-      localStorage.setItem("hashcashTokens", JSON.stringify(savedTokens));
-      loadTokens();
-    }
-
-    function activateToken(token) {
-      var expirationDate = new Date(token.substr(9));
-      var currentDate = new Date();
-      if (currentDate < expirationDate) {
-        // Token is valid
-        setTimeout(function() {
-          var savedTokens = JSON.parse(localStorage.getItem("hashcashTokens")) || [];
-          var index = savedTokens.indexOf(token);
-          if (index > -1) {
-            savedTokens.splice(index, 1);
-            localStorage.setItem("hashcashTokens", JSON.stringify(savedTokens));
-            loadTokens();
-          }
-        }, expirationDate - currentDate);
-      } else {
-        // Token has expired
-        var savedTokens = JSON.parse(localStorage.getItem("hashcashTokens")) || [];
-        var index = savedTokens.indexOf(token);
-        if (index > -1) {
-          savedTokens.splice(index, 1);
-          localStorage.setItem("hashcashTokens", JSON.stringify(savedTokens));
-          loadTokens();
-        }
+  <head>
+    <title>Hashcash Token</title>
+    <script src="https://unpkg.com/@zxing/library@0.18.5"></script>
+    <script>
+      function generateToken() {
+        const date = new Date();
+        const token = `${date.getTime()}-hashcash`;
+        localStorage.setItem(token, 'unused');
+        return token;
       }
-    }
-  </script>
-</head>
-<body onload="loadTokens()">
-  <h1>Hashcash Tokens</h1>
-  <button onclick="scanToken()">Scan Token</button>
-  <br><br>
-  <ul id="tokenList">
-  </ul>
-  <script>
-    // Generate a token and save it to local storage
-    var token = generateToken();
-    saveToken(token);
-    // Activate the token for testing
-    activateToken(token);
-  </script>
-</body>
+
+      function scanQRCode() {
+        const codeReader = new ZXing.BrowserQRCodeReader();
+        codeReader
+          .decodeOnceFromVideoDevice(undefined, 'video')
+          .then(result => {
+            console.log(result.text);
+            localStorage.setItem(result.text, 'unused');
+          })
+          .catch(err => console.error(err));
+      }
+
+      function showTokens() {
+        const tokens = Object.keys(localStorage);
+        const tokensDiv = document.getElementById('tokens');
+        tokensDiv.innerHTML = '';
+        tokens.forEach(token => {
+          const button = document.createElement('button');
+          button.textContent = token;
+          button.addEventListener('click', () => {
+            const qrCode = new QRCode(document.getElementById('qrcode'), {
+              text: token,
+              width: 128,
+              height: 128,
+              colorDark: '#000000',
+              colorLight: '#ffffff',
+              correctLevel: QRCode.CorrectLevel.H
+            });
+            localStorage.removeItem(token);
+            const timerDiv = document.getElementById('timer');
+            timerDiv.textContent = 'Token will be removed in 3 minutes';
+            setTimeout(() => {
+              timerDiv.textContent = '';
+            }, 3000);
+          });
+          tokensDiv.appendChild(button);
+        });
+      }
+    </script>
+  </head>
+  <body>
+    <h1>Hashcash Token</h1>
+    <button onclick="generateToken()">Generate Token</button>
+    <button onclick="scanQRCode()">Scan Token</button>
+    <div id="tokens"></div>
+    <div id="qrcode"></div>
+    <div id="timer"></div>
+    <script>
+      showTokens();
+    </script>
+    <video id="video" style="display: none;"></video>
+  </body>
 </html>
+
